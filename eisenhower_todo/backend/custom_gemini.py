@@ -6,7 +6,7 @@ $ pip install google-generativeai
 import datetime
 import google.generativeai as genai
 
-genai.configure(api_key="AIzaSyCzy2Lt7LnV3SgBvuRnF4718tiFD_cvqig")
+genai.configure(api_key="[ENTER API KEY HERE]")
 
 # Set up the model
 generation_config = {
