@@ -1,26 +1,99 @@
-import 'package:eisenhower_todo/models/task.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import '../models/task.dart';
+import '../providers/screen_manager.dart';
 import '../providers/task_provider.dart';
 import '../providers/add_task_providers.dart';
 import '../widgets/task_tile.dart';
 import '../functions/info_parsers.dart';
-import '../functions/backend.dart';
+import 'add_task_screen.dart';
+import 'calendar_screen.dart';
+import 'profile_screen.dart';
+import 'analytics_screen.dart';
+import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
+import '../widgets/eisenhower_task_tile.dart';
+import '../widgets/task_list_tile.dart';
 
 class HomeScreen extends StatelessWidget {
+  static final List<Widget> _widgetOptions = <Widget>[
+    TaskListView(),
+    CalendarScreen(),
+    AddTaskScreen(),
+    AnalyticsScreen(),
+    ProfileScreen(),
+    // Add more screens if needed
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _widgetOptions.elementAt(
+        Provider.of<ScreenManager>(context).selectedIndex,
+      ),
+      bottomNavigationBar: bottomNavBar(context),
+    );
+  }
+
+  SnakeNavigationBar bottomNavBar(context) {
+    return SnakeNavigationBar.color(
+        height: 70,
+        behaviour: SnakeBarBehaviour.floating,
+        snakeShape: SnakeShape.circle,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(24),
+
+        ///configuration for SnakeNavigationBar.color
+        snakeViewColor: Colors.black26,
+        selectedItemColor:
+            Provider.of<ScreenManager>(context).selectedColor, 
+        unselectedItemColor: Provider.of<ScreenManager>(context).unSelectedColor,
+
+        ///configuration for SnakeNavigationBar.gradient
+        shadowColor: Colors.grey,
+        
+
+        showUnselectedLabels: false,
+        showSelectedLabels: false,
+
+        currentIndex: Provider.of<ScreenManager>(context).selectedIndex,
+        onTap: (index) {
+          Provider.of<ScreenManager>(context, listen: false)
+              .selectScreen(index);
+        },
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.grid_view_rounded), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today), label: 'calendar'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'add task'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart_rounded), label: 'Charts/Analytics'),
+              BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: 'profile'),
+        ],
+        selectedLabelStyle: const TextStyle(fontSize: 14),
+        unselectedLabelStyle: const TextStyle(fontSize: 10),
+
+        backgroundColor: Colors.black,
+        
+      );
+  }
+}
+
+class TaskListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tasks = Provider.of<TaskProvider>(context).tasks;
 
-    return buildTaskListView(tasks, context);
+    return buildHomeView(tasks, context);
   }
 
-  Scaffold buildTaskListView(List<Task> tasks, BuildContext context) {
+  Scaffold buildHomeView(List<Task> tasks, BuildContext context) {
     return Scaffold(
       appBar: createAppBar(),
-      body: Stack(
+      body: ListView(
         children: [
           Padding(
             padding: const EdgeInsets.only(
@@ -28,124 +101,69 @@ class HomeScreen extends StatelessWidget {
               left: 16,
               right: 16,
             ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Color.fromARGB(255, 241, 241, 241),
-                suffixIcon: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Icon(
-                      Icons.filter_list,
-                      color: Colors.white,
-                    ),
-                  ),
-                  onPressed: () {
-                    // Clear the search field
-                  },
-                ),
-              ),
-            ),
+            child: searchBar(),
           ),
           Padding(
-            padding: EdgeInsets.only(top: 100),
-            child: tasksList(tasks, context),
+            padding: const EdgeInsets.only(bottom: 16),
+            child: eisenhowerTaskTile(),
           ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16),
+            child: TasksList(tasks: tasks),
+          )
         ],
       ),
-      // Add a floating action button
-      floatingActionButton: addTaskButton(context),
     );
   }
 
-  FloatingActionButton addTaskButton(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () {
-        Navigator.of(context).pushNamed('/add-task');
-        Provider.of<UrgencyProvider>(context, listen: false).reset();
-        Provider.of<ImportanceProvider>(context, listen: false).reset();
-      },
-      child: const Icon(Icons.add),
+  TextField searchBar() {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: "Search",
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: const Color.fromARGB(255, 241, 241, 241),
+        suffixIcon: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.filter_list,
+              color: Colors.white,
+            ),
+          ),
+          onPressed: () {
+            // Clear the search field
+          },
+        ),
+      ),
     );
   }
 
-  Column tasksList(List<Task> tasks, BuildContext context) {
-    return Column(
-      children: [
-        const Text('Urgent and Important'),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => task.isUrgent && task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => task.isUrgent && task.isImportant)
-                .toList()[index];
-            return createTaskTile(task, context);
-          },
-        ),
-        const Text('Urgent but not Important'),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => task.isUrgent && !task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => task.isUrgent && !task.isImportant)
-                .toList()[index];
-            return createTaskTile(task, context);
-          },
-        ),
-        const Text('Not Urgent but Important'),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => !task.isUrgent && task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => !task.isUrgent && task.isImportant)
-                .toList()[index];
-            return createTaskTile(task, context);
-          },
-        ),
-        const Text('Not Urgent and not Important'),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => !task.isUrgent && !task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => !task.isUrgent && !task.isImportant)
-                .toList()[index];
-            return createTaskTile(task, context);
-          },
-        ),
-      ],
-    );
-  }
+  
 
   AppBar createAppBar() {
     return AppBar(
-      flexibleSpace: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/banner/bg4.webp'),
-              fit: BoxFit.cover,
+      flexibleSpace: Padding(
+        padding: const EdgeInsets.only(left: 0, right: 0),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(30),
+            bottomRight: Radius.circular(30),
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/banner/bg4.webp'),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
@@ -159,7 +177,8 @@ class HomeScreen extends StatelessWidget {
               fontWeight: FontWeight.bold)),
       actions: const [
         CircleAvatar(
-          backgroundImage: AssetImage(''),
+          backgroundImage: AssetImage(
+              'assets/avatar.png'), // Update with the correct image asset
           radius: 20,
         ),
         SizedBox(width: 16),
@@ -179,8 +198,10 @@ class HomeScreen extends StatelessWidget {
       dueTime: parseTime(task.dueTime),
       onChanged: (value) {
         // Implement task completion logic
-        // Provider.of<TaskProvider>(context, listen: false).updateTaskStatus(task.id, value);
+        Provider.of<TaskProvider>(context, listen: false)
+            .updateTaskStatus(task.id, value);
       },
+      timestampCreated: task.timestampCreated,
     );
   }
 }

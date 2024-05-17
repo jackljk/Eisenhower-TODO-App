@@ -1,3 +1,4 @@
+import 'package:eisenhower_todo/providers/screen_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
@@ -16,20 +17,16 @@ class MyTodoApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => TaskProvider()),
-        ChangeNotifierProvider(create: (context) => UrgencyProvider()), 
+        ChangeNotifierProvider(create: (context) => UrgencyProvider()),
         ChangeNotifierProvider(create: (context) => ImportanceProvider()),
+        ChangeNotifierProvider(create: (context) => ScreenManager()),
       ],
       child: MaterialApp(
         title: 'Todo App',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: '/',
-        routes: {
-          '/': (ctx) => HomeScreen(),
-          '/add-task': (ctx) => AddTaskScreen(),
-          // Add more routes if needed
-        },
+        home: HomeScreen(),
       ),
     );
   }

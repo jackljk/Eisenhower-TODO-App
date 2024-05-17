@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'package:eisenhower_todo/models/task.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/add_task_providers.dart';
 import '../functions/backend.dart';
 import 'dart:convert';
+import '../providers/screen_manager.dart';
 
-class AddTaskScreen extends StatelessWidget {
+class AddTaskScreen extends StatefulWidget {
+  @override
+  _AddTaskScreenState createState() => _AddTaskScreenState();
+}
+
+class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController _taskController = TextEditingController();
   final TextEditingController _dueDateController = TextEditingController();
   final TextEditingController _timeEstimateController = TextEditingController();
@@ -19,16 +23,18 @@ class AddTaskScreen extends StatelessWidget {
   Completer<void> _addTaskCompleter = Completer();
   var condition = false;
 
-  AddTaskScreen({super.key});
+  @override
+  void initState() {
+    super.initState();
+    _addTaskCompleter = Completer();
+  }
 
   void _addTask(BuildContext context) {
     final taskText = _taskController.text;
     final dueDate = _dueDateController.text;
     final dueTime = _dueTimeController.text;
-    final isUrgent =
-        Provider.of<UrgencyProvider>(context, listen: false).isUrgent;
-    final isImportant =
-        Provider.of<ImportanceProvider>(context, listen: false).isImportant;
+    final isUrgent = Provider.of<UrgencyProvider>(context, listen: false).isUrgent;
+    final isImportant = Provider.of<ImportanceProvider>(context, listen: false).isImportant;
     final timeEstimate = _timeEstimateController.text;
 
     if (taskText.isNotEmpty) {
@@ -44,7 +50,9 @@ class AddTaskScreen extends StatelessWidget {
           dueTime: dueTime,
         ),
       );
-      Navigator.of(context).pop();
+      Provider.of<ScreenManager>(context, listen: false).selectScreen(0);
+      Provider.of<UrgencyProvider>(context, listen: false).reset();
+      Provider.of<ImportanceProvider>(context, listen: false).reset();
     }
   }
 
@@ -52,10 +60,8 @@ class AddTaskScreen extends StatelessWidget {
     final taskText = _taskController.text;
     final dueDate = _dueDateController.text;
     final dueTime = _dueTimeController.text;
-    final isUrgent =
-        Provider.of<UrgencyProvider>(context, listen: false).isUrgent;
-    final isImportant =
-        Provider.of<ImportanceProvider>(context, listen: false).isImportant;
+    final isUrgent = Provider.of<UrgencyProvider>(context, listen: false).isUrgent;
+    final isImportant = Provider.of<ImportanceProvider>(context, listen: false).isImportant;
     final timeEstimate = _timeEstimateController.text;
 
     if (taskText.isNotEmpty) {
@@ -91,7 +97,7 @@ class AddTaskScreen extends StatelessWidget {
         _dueDateController.text = task['due'];
         if (task['due_time'] == "[NOT GIVEN]")
           _dueTimeController.text = "";
-        else{
+        else {
           _dueTimeController.text = task['due_time'];
         }
 
@@ -101,8 +107,7 @@ class AddTaskScreen extends StatelessWidget {
 
         // Update the urgency and importance providers with the task data
         Provider.of<UrgencyProvider>(context, listen: false).isUrgent = urgency;
-        Provider.of<ImportanceProvider>(context, listen: false).isImportant =
-            importance;
+        Provider.of<ImportanceProvider>(context, listen: false).isImportant = importance;
 
         await _addTaskCompleter.future;
         print('added');
