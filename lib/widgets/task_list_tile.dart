@@ -21,57 +21,25 @@ class TasksList extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => task.isUrgent && task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => task.isUrgent && task.isImportant)
-                .toList()[index];
-            return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: createTaskTile(task, context));
-          },
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => task.isUrgent && !task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => task.isUrgent && !task.isImportant)
-                .toList()[index];
-            return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: createTaskTile(task, context));
-          },
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => !task.isUrgent && task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => !task.isUrgent && task.isImportant)
-                .toList()[index];
-            return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: createTaskTile(task, context));
-          },
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount:
-              tasks.where((task) => !task.isUrgent && !task.isImportant).length,
-          itemBuilder: (ctx, index) {
-            final task = tasks
-                .where((task) => !task.isUrgent && !task.isImportant)
-                .toList()[index];
-            return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: createTaskTile(task, context));
-          },
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            color: Colors.grey[200], // Change this to your desired color
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: tasks.length,
+                itemBuilder: (ctx, index) {
+                  final task = tasks.toList()[index];
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: createTaskTile(task, context),
+                  );
+                },
+              ),
+            ),
+          ),
         ),
       ],
     );
